@@ -1,0 +1,51 @@
+{
+    "version": "0",
+    "id": "98685181-6acb-40c0-9224-4d4ac068fb46",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "111122223333",
+    "time": "2016-02-13T18:46:16Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.03",
+        "userIdentity": {
+            "type": "Root",
+            "principalId": "111122223333",
+            "arn": "arn:aws:iam::111122223333:root",
+            "accountId": "111122223333",
+            "accessKeyId": "ASIAI2YQZ486GRMMQEKA",
+            "sessionContext": {
+                "attributes": {
+                    "mfaAuthenticated": "false",
+                    "creationDate": "2016-02-13T15:42:29Z"
+                }
+            }
+        },
+        "eventTime": "2016-02-13T18:46:16Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DeleteTags",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "192.168.12.34",
+        "userAgent": "console.ec2.amazonaws.com",
+        "requestParameters": {
+            "resourcesSet": {
+                "items": [{
+                    "resourceId": "sg-c0cec6aa"
+                }]
+            },
+            "tagSet": {
+                "items": [{
+                    "key": "ThisIsATag",
+                    "value": "ThisIsAValue"
+                }]
+            }
+        },
+        "responseElements": {
+            "_return": true
+        },
+        "requestID": "4d9b5f24-f74c-47cd-9d7c-07e3532f6e53",
+        "eventID": "55000609-c0c3-4335-b9b3-b8c2002fac98",
+        "eventType": "AwsApiCall"
+    }
+}

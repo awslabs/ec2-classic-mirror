@@ -1,0 +1,14 @@
+{
+    "version": "0",
+    "id": "d1be1fb9-5c6f-4d83-ad41-6beaa0ccfc02",
+    "detail-type": "EC2 Instance State-change Notification",
+    "source": "aws.ec2",
+    "account": "111122223333",
+    "time": "2016-04-24T17:41:37Z",
+    "region": "us-east-1",
+    "resources": [ "arn:aws:ec2:us-east-1:111122223333:instance/i-93b56308" ],
+    "detail": {
+        "instance-id": "i-93b56308",
+        "state": "running"
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "version": "0",
+    "id": "4fb05bbe-bd15-495f-a059-267279ce46cd",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "111122223333",
+    "time": "2016-02-13T18:44:01Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.03",
+        "userIdentity": {
+            "type": "Root",
+            "principalId": "111122223333",
+            "arn": "arn:aws:iam::111122223333:root",
+            "accountId": "111122223333",
+            "accessKeyId": "ASIAI2YQZ486GRMMQEKA",
+            "sessionContext": {
+                "attributes": {
+                    "mfaAuthenticated": "false",
+                    "creationDate": "2016-02-13T15:42:29Z"
+                }
+            }
+        },
+        "eventTime": "2016-02-13T18:44:01Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "CreateTags",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "192.168.12.34",
+        "userAgent": "console.ec2.amazonaws.com",
+        "errorCode": "Client.InvalidSomething.NotFound",
+        "errorMessage": "Faking an error here",
+        "requestParameters": {
+            "resourcesSet": {
+                "items": [{
+                    "resourceId": "sg-c0cec6aa"
+                }]
+            },
+            "tagSet": {
+                "items": [{
+                    "key": "classicmirror:linkToVPC",
+                    "value": "vpc-12341234"
+                }]
+            }
+        },
+        "responseElements": null,
+        "requestID": "dc89bf8b-b1ff-4199-b594-ca14543287cb",
+        "eventID": "cbbc041c-4390-47a0-84d2-a565e47221cb",
+        "eventType": "AwsApiCall"
+    }
+}

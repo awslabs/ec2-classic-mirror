@@ -1,0 +1,191 @@
+{
+    "Description": "ClassicMirror: Lambda function and CloudWatch Events rule",
+
+    "Parameters": {
+
+        "LambdaFunctionS3BucketBase": {
+            "Type": "String",
+            "Description": "S3 bucket where Lambda code lives"
+        },
+
+        "LambdaFunctionS3Key": {
+            "Type": "String",
+            "Description": "S3 key for lambda .zip file"
+        }
+
+    },
+
+    "Resources": {
+
+        "LambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": { "Fn::Join": [ "-", [
+                        { "Ref": "LambdaFunctionS3BucketBase" },
+                        { "Ref": "AWS::Region" }
+                    ] ] },
+                    "S3Key": { "Ref": "LambdaFunctionS3Key" }
+                },
+                "Description": "This event-triggered Lambda function monitors user-tagged EC2-Classic Security Groups, maintaining mirror Security Groups in the specified VPCs and ClassicLinking member EC2 instances to them",
+                "Handler": "index.handler",
+                "Role": { "Fn::GetAtt": [ "LambdaExecRole", "Arn" ] },
+                "Runtime": "nodejs4.3",
+                "Timeout": "60"
+            }
+        },
+
+        "LambdaExecRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Path": "/ClassicMirror/LambdaExecRole/",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "lambda.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+                ],
+                "Policies": [
+                    {
+                        "PolicyName": "EC2PermissionsForClassicMirror",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [ {
+                                "Effect": "Allow",
+                                "Resource": "*",
+                                "Action": [
+                                    "ec2:AttachClassicLinkVpc",
+                                    "ec2:CreateSecurityGroup",
+                                    "ec2:CreateTags",
+                                    "ec2:DeleteTags",
+                                    "ec2:DescribeClassicLinkInstances",
+                                    "ec2:DescribeInstances",
+                                    "ec2:DescribeSecurityGroups",
+                                    "ec2:DetachClassicLinkVpc"
+                                ]
+                            } ]
+                        }
+                    },
+                    {
+                        "PolicyName": "EC2PermissionsForClassicMirrorTaggedResources",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [ {
+                                "Effect": "Allow",
+                                "Resource": "*",
+                                "Action": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:DeleteSecurityGroup",
+                                    "ec2:RevokeSecurityGroupIngress"
+                                ],
+                                "Condition": {
+                                    "StringLike": {
+                                        "ec2:ResourceTag/classicmirror:mirroredFromClassicSecurityGroupId": "*"
+                                    }
+                                }
+                            } ]
+                        }
+                    },
+                    {
+                        "PolicyName": "LambdaPermissions",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [ {
+                                "Effect": "Allow",
+                                "Resource": "*",
+                                "Action": [
+                                    "lambda:GetFunctionConfiguration"
+                                ]
+                            } ]
+                        }
+                    }
+                ]
+            }
+        },
+
+        "CloudWatchEventRuleEC2API": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Description": "ClassicMirror EC2 API call event",
+                "EventPattern": {
+                    "detail-type": [ "AWS API Call via CloudTrail" ],
+                    "detail": {
+                        "eventSource": [ "ec2.amazonaws.com" ],
+                        "eventName": [
+                            "AuthorizeSecurityGroupIngress",
+                            "CreateTags",
+                            "DeleteSecurityGroup",
+                            "DeleteTags",
+                            "RevokeSecurityGroupIngress"
+                        ]
+                    }
+                },
+                "State": "ENABLED",
+                "Targets": [ {
+                    "Arn": { "Fn::GetAtt": [ "LambdaFunction", "Arn" ] },
+                    "Id": "ClassicMirrorEC2API-Lambda"
+                } ]
+            }
+        },
+        "LambdaPermissionEC2API": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [ "LambdaFunction", "Arn" ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [ "CloudWatchEventRuleEC2API", "Arn" ]
+                }
+            }
+        },
+
+        "CloudWatchEventRuleInstanceRunning": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Description": "ClassicMirror EC2 instance state change notification event",
+                "EventPattern": {
+                    "detail-type": [ "EC2 Instance State-change Notification" ],
+                    "source": [ "aws.ec2" ],
+                    "detail": { "state": [ "running" ] }
+                },
+                "State": "ENABLED",
+                "Targets": [ {
+                    "Arn": { "Fn::GetAtt": [ "LambdaFunction", "Arn" ] },
+                    "Id": "ClassicMirrorInstanceRunning-Lambda"
+                } ]
+            }
+        },
+        "LambdaPermissionInstanceRunning": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [ "LambdaFunction", "Arn" ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [ "CloudWatchEventRuleInstanceRunning", "Arn" ]
+                }
+            }
+        }
+
+    },
+
+    "Outputs": {
+
+        "LambdaARN": {
+            "Description": "ARN of the Lambda created by this stack",
+            "Value": { "Fn::GetAtt": [ "LambdaFunction", "Arn" ] }
+        }
+
+    }
+}

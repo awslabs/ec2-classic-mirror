@@ -1,0 +1,35 @@
+{
+  "name": "ec2-classic-mirror",
+  "version": "1.0.0",
+  "description": "ClassicMirror is an automation tool that assists with an in-progress migration of your EC2 resources from EC2-Classic to a VPC",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodeunit ./tst"
+  },
+  "dependencies": {
+    "aws-sdk": "2.x",
+    "promise": "7.x"
+  },
+  "devDependencies": {
+    "nodeunit": "~0.9"
+  },
+  "engines": {
+    "node": ">=4.3"
+  },
+  "homepage": "https://github.com/awslabs/ec2-classic-mirror",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/awslabs/ec2-classic-mirror.git"
+  },
+  "bugs": {
+    "url": "https://github.com/awslabs/ec2-classic-mirror"
+  },
+  "license": "SEE LICENSE IN http://aws.amazon.com/asl/",
+  "keywords": [
+    "aws",
+    "classiclink",
+    "ec2",
+    "node.js",
+    "vpc"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+    "version": "0",
+    "id": "c787dd49-2342-4266-8183-143f6e1baa60",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "111122223333",
+    "time": "2016-02-13T18:13:32Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.03",
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "AROAI73YU4ORRHW2435MQ:awslambda_309_20160305214257834",
+            "arn":"arn:aws:sts::111122223333:assumed-role/ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V/awslambda_309_20160305214257834",
+            "accountId": "111122223333",
+            "accessKeyId": "ASIAI2YQZ486GRMMQEKA",
+            "sessionContext": {
+                "attributes": {
+                    "mfaAuthenticated": "false",
+                    "creationDate": "2016-03-05T21:42:57Z"
+                },
+                "sessionIssuer": {
+                    "type":"Role",
+                    "principalId": "AROAI73YU4ORRHW2435MQ",
+                    "arn":"arn:aws:iam::111122223333:role/ClassicMirror/LambdaExecRole/ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V",
+                    "accountId": "111122223333",
+                    "userName": "ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V"
+                }
+            }
+        },
+        "eventTime": "2016-02-13T18:13:32Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "AuthorizeSecurityGroupIngress",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "192.168.198.68",
+        "userAgent": "console.ec2.amazonaws.com",
+        "requestParameters": {
+            "groupId": "sg-c0dec6aa",
+            "ipPermissions": {
+                "items": [{
+                    "ipProtocol": "tcp",
+                    "fromPort": 3333,
+                    "toPort": 3333,
+                    "groups": {},
+                    "ipRanges": {
+                        "items": [{
+                            "cidrIp": "192.168.99.99/32"
+                        }]
+                    },
+                    "prefixListIds": {}
+                }]
+            }
+        },
+        "responseElements": {
+            "_return": true
+        },
+        "requestID": "9d6c02d1-489a-409c-a577-38de8a2fe070",
+        "eventID": "5c39a864-ce77-4404-8100-39310e27bd02",
+        "eventType": "AwsApiCall"
+    }
+}

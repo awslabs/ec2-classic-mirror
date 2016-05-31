@@ -1,0 +1,55 @@
+{
+    "version": "0",
+    "id": "8f946af5-982b-4919-b9a5-27ed4a308cfe",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "111122223333",
+    "time": "2016-02-13T18:22:12Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.03",
+        "userIdentity": {
+            "type": "Root",
+            "principalId": "111122223333",
+            "arn": "arn:aws:iam::111122223333:root",
+            "accountId": "111122223333",
+            "accessKeyId": "ASIAI2YQZ486GRMMQEKA",
+            "sessionContext": {
+                "attributes": {
+                    "mfaAuthenticated": "false",
+                    "creationDate": "2016-02-13T15:42:29Z"
+                }
+            }
+        },
+        "eventTime": "2016-02-13T18:22:12Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "AuthorizeSecurityGroupIngress",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "192.168.12.34",
+        "userAgent": "console.ec2.amazonaws.com",
+        "requestParameters": {
+            "groupId": "sg-c0cec6aa",
+            "ipPermissions": {
+                "items": [{
+                    "ipProtocol": "tcp",
+                    "fromPort": 22,
+                    "toPort": 22,
+                    "groups": {
+                        "items": [{
+                            "groupId": "sg-c0cec6aa"
+                        }]
+                    },
+                    "ipRanges": {},
+                    "prefixListIds": {}
+                }]
+            }
+        },
+        "responseElements": {
+            "_return": true
+        },
+        "requestID": "0980ea71-b001-46f8-9951-feb6fd3eded7",
+        "eventID": "47c9b3bd-8d1a-4a18-9249-ffc5163f7063",
+        "eventType": "AwsApiCall"
+    }
+}

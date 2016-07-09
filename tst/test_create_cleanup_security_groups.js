@@ -28,6 +28,7 @@ exports.setUp = function(callback) {
 exports.createCleanupSecurityGroups = {
     setUp: function(callback) {
         this.vpcId = 'vpc-11111111';
+        this.otherVpcId = 'vpc-22222222';
         this.classicSg1 = new SgMock('sg-11111111').withLinkToVpc(this.vpcId)
             .withCopiedToVpc('sg-abababab'); // wrong
         this.classicSg2 = new SgMock('sg-22222222').withLinkToVpc(this.vpcId);
@@ -35,7 +36,21 @@ exports.createCleanupSecurityGroups = {
         this.vpcSg4 = new SgMock('sg-44444444').withVpcId(this.vpcId).withCopiedFromClassic('sg-11111111');
         this.vpcSg5 = new SgMock('sg-55555555').withVpcId(this.vpcId).withCopiedFromClassic('sg-ffffffff');
         this.vpcSg6 = new SgMock('sg-66666666').withVpcId(this.vpcId).withCopiedFromClassic('sg-fefefefe');
-        this.ec2mock.securityGroups = [this.classicSg1, this.classicSg2, this.classicSg3, this.vpcSg4, this.vpcSg5, this.vpcSg6];
+
+        // Default Security Groups
+        this.classicSgDefault = new SgMock('sg-77777777')
+            .withGroupName('default')
+            .withLinkToVpc(this.vpcId);
+        this.vpcSgDefault = new SgMock('sg-88888888')
+            .withVpcId(this.vpcId)
+            .withGroupName('default');
+        this.otherVpcSgDefault = new SgMock('sg-99999999')
+            .withVpcId(this.otherVpcId)
+            .withGroupName('default')
+            .withCopiedFromClassic('sg-fdfdfdfd')
+            .withTag(Tags.UPDATE_TIMESTAMP_TAG_KEY, 'good ol days');
+
+        this.ec2mock.securityGroups = [this.classicSg1, this.classicSg2, this.classicSg3, this.vpcSg4, this.vpcSg5, this.vpcSg6, this.classicSgDefault, this.vpcSgDefault, this.otherVpcSgDefault];
 
         this.securityGroupPairs = [
             { classicSecurityGroup: this.classicSg1, vpcSecurityGroup: this.vpcSg4 },
@@ -43,17 +58,18 @@ exports.createCleanupSecurityGroups = {
             { classicSecurityGroup: this.classicSg3 },
             { vpcSecurityGroup: this.vpcSg5 },
             { vpcSecurityGroup: this.vpcSg6 },
+            { classicSecurityGroup: this.classicSgDefault },
+            { vpcSecurityGroup: this.otherVpcSgDefault }
         ];
+        this.originalSecurityGroupPairsCount = this.securityGroupPairs.length;
 
         // Keep track of deleted SGs
         this.deletedGroupIds = [];
         var _deleteSecurityGroup = this.ec2mock.deleteSecurityGroup.bind(this.ec2mock);
         var that = this;
         this.ec2mock.deleteSecurityGroup = function(params, callback) {
-            _deleteSecurityGroup(params, function(err, data) {
-                if (data) that.deletedGroupIds.push(params.GroupId);
-                callback(err, data);
-            });
+            that.deletedGroupIds.push(params.GroupId);
+            _deleteSecurityGroup(params, callback);
         }
 
         callback();
@@ -65,34 +81,31 @@ exports.createCleanupSecurityGroups = {
         var that = this;
         createSecurityGroups.createVpcMirroredSecurityGroups(this.securityGroupPairs, function(err, data) {
             test.ok(!err);
-            test.equals(that.securityGroupPairs.length, 5);
+            test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount);
 
-            test.equals(that.securityGroupPairs[0].classicSecurityGroup.GroupId, that.classicSg1.GroupId);
-            test.equals(Tags.getResourceTagValue(that.securityGroupPairs[0].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY), that.vpcSg4.GroupId);
-            test.equals(that.securityGroupPairs[0].vpcSecurityGroup.GroupId, that.vpcSg4.GroupId);
-
-            test.equals(that.securityGroupPairs[1].classicSecurityGroup.GroupId, that.classicSg2.GroupId);
-            test.ok(Tags.getResourceTagValue(that.securityGroupPairs[1].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY));
-            test.ok(that.securityGroupPairs[1].vpcSecurityGroup);
-            test.equals(that.securityGroupPairs[1].vpcSecurityGroup.VpcId, that.vpcId);
-            test.equals(Tags.getResourceTagValue(that.securityGroupPairs[1].vpcSecurityGroup, Tags.COPYTAG_VPC_SG_KEY), that.classicSg2.GroupId);
-
-            test.equals(that.securityGroupPairs[2].classicSecurityGroup.GroupId, that.classicSg3.GroupId);
-            test.ok(Tags.getResourceTagValue(that.securityGroupPairs[2].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY));
-            test.ok(that.securityGroupPairs[2].vpcSecurityGroup);
-            test.equals(that.securityGroupPairs[2].vpcSecurityGroup.VpcId, that.vpcId);
-            test.equals(Tags.getResourceTagValue(that.securityGroupPairs[2].vpcSecurityGroup, Tags.COPYTAG_VPC_SG_KEY), that.classicSg3.GroupId);
+            _validatePair(test, that.securityGroupPairs[0], that.classicSg1.GroupId, that.vpcSg4.GroupId, that.vpcId);
+            _validatePair(test, that.securityGroupPairs[1], that.classicSg2.GroupId, null, that.vpcId);
+            _validatePair(test, that.securityGroupPairs[2], that.classicSg3.GroupId, null, that.vpcId);
 
             test.ok(!that.securityGroupPairs[3].classicSecurityGroup);
             test.equals(that.securityGroupPairs[3].vpcSecurityGroup.GroupId, that.vpcSg5.GroupId);
 
+            _validatePair(test, that.securityGroupPairs[5], that.classicSgDefault.GroupId, that.vpcSgDefault.GroupId, that.vpcId);
+
             cleanupSecurityGroups.cleanupOrphanedVpcMirroredSecurityGroups(that.securityGroupPairs, function(err, data) {
                 test.ok(!err);
-                test.equals(that.securityGroupPairs.length, 3);
+
+                // One of the orphans is a default Security Group; we
+                // should not be trying to delete it, but it should be
+                // removed from the set of Security Group pairs.
+                // The other two are expected to be deleted.
+                var expectedDeletedGroupIds = ['sg-55555555', 'sg-66666666' ];
+                test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount - expectedDeletedGroupIds.length - 1);
                 for (var i = 0; i < that.securityGroupPairs.length; i++) {
                     test.ok(that.securityGroupPairs[i].classicSecurityGroup);
                 }
-                test.deepEqual(that.deletedGroupIds.sort(), ['sg-55555555', 'sg-66666666']);
+                test.deepEqual(that.deletedGroupIds.sort(), expectedDeletedGroupIds);
+                _validateOrphanedVpcDefaultSecurityGroup(test, that.otherVpcSgDefault);
                 test.done();
             });
        });
@@ -118,7 +131,7 @@ exports.createCleanupSecurityGroups = {
             // One of the attempts to createSecurityGroups failed, but
             // this should succeed.
             test.ok(!err);
-            test.equals(that.securityGroupPairs.length, 5);
+            test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount);
 
             test.ok(!that.securityGroupPairs[1].vpcSecurityGroup);
             test.ok(that.securityGroupPairs[1].error);
@@ -139,12 +152,25 @@ exports.createCleanupSecurityGroups = {
         var that = this;
         createSecurityGroups.createVpcMirroredSecurityGroups(this.securityGroupPairs, function(err, data) {
             test.ok(!err);
-            test.equals(that.securityGroupPairs.length, 5);
+
+            // securityGroupPairs should not have lost anything
+            test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount);
+
+            // Any of the pairs that were trying to establish a new
+            // mirror SG in the VPC will have failed
             test.ok(!that.securityGroupPairs[1].vpcSecurityGroup);
             test.ok(!that.securityGroupPairs[2].vpcSecurityGroup);
-            test.equals(that.deletedGroupIds.length, 2);
+            test.ok(!that.securityGroupPairs[5].vpcSecurityGroup);
             test.equals(Tags.getResourceTagValue(that.securityGroupPairs[1].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY), undefined);
             test.equals(Tags.getResourceTagValue(that.securityGroupPairs[2].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY), undefined);
+            test.equals(Tags.getResourceTagValue(that.securityGroupPairs[5].classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY), undefined);
+
+            // Two of them -- the ones that were trying to create new
+            // Security Groups -- will need to be cleaned up.
+            // The third was a default Security Group, which does not
+            // need to be cleaned up.
+            test.equals(that.deletedGroupIds.length, 2);
+
             test.done();
         });
     },
@@ -166,13 +192,47 @@ exports.createCleanupSecurityGroups = {
         cleanupSecurityGroups.cleanupOrphanedVpcMirroredSecurityGroups(this.securityGroupPairs, function(err, data) {
             test.ok(!err);
 
-            // Expect: Both entries are removed from securityGroupPairs,
-            //         even the failing one.
-            // But only one of them got successfully deleted
-            test.equals(that.securityGroupPairs.length, 3);
+            // Expect: All three entries are removed from
+            //         securityGroupPairs, even the failing one.
+            // But only one of them got successfully deleted.  Of the
+            // others, one is a default Security Group and isn't
+            // deletable; the other we forced to fail deletion in this
+            // test.
+            test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount - 3);
             test.deepEqual(that.deletedGroupIds, ['sg-66666666']);
         });
         test.done();
     }
 };
 
+function _validatePair(test, pair, expectedClassicSgId, expectedVpcSgId, expectedVpcId) {
+    test.ok(!pair.error);
+
+    test.equals(pair.classicSecurityGroup.GroupId, expectedClassicSgId);
+    if (expectedVpcSgId) {
+        test.equals(Tags.getResourceTagValue(pair.classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY), expectedVpcSgId);
+    } else {
+        test.ok(Tags.getResourceTagValue(pair.classicSecurityGroup, Tags.COPYTAG_CLASSIC_SG_KEY));
+    }
+
+    test.equals(pair.vpcSecurityGroup.VpcId, expectedVpcId);
+    if (expectedVpcSgId) {
+        test.equals(pair.vpcSecurityGroup.GroupId, expectedVpcSgId);
+    } else {
+        test.ok(pair.vpcSecurityGroup.GroupId);
+    }
+    test.equals(Tags.getResourceTagValue(pair.vpcSecurityGroup, Tags.COPYTAG_VPC_SG_KEY), expectedClassicSgId);
+}
+
+// When a VPC's default Security Group gets orphaned, expect that we
+// have cleaned up all our tags.
+function _validateOrphanedVpcDefaultSecurityGroup(test, vpcSecurityGroup) {
+    var tags = [
+        Tags.COPYTAG_VPC_SG_KEY,
+        Tags.UPDATE_TIMESTAMP_TAG_KEY,
+        Tags.LAST_ERROR_TAG_KEY
+    ];
+    tags.forEach(function(tag) {
+        test.ok(!Tags.getResourceTagValue(vpcSecurityGroup, tag));
+    });
+}

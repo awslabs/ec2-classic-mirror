@@ -83,6 +83,14 @@ module.exports = function Ec2Mock() {
                     if (filter.Name == 'tag-key') {
                         var filtered = filterByTagKeys(sgs, filter.Values);
                         sgs = filtered;
+                    } else if (filter.Name == 'vpc-id') {
+                        sgs = sgs.filter(function(sg) {
+                            return (filter.Values.indexOf(sg.VpcId) >= 0);
+                        });
+                    } else if (filter.name = 'group-name') {
+                        sgs = sgs.filter(function(sg) {
+                            return (filter.Values.indexOf(sg.GroupName) >= 0);
+                        });
                     } else {
                         callback('Unsupported filter ' + filter.Name);
                         return;
@@ -101,6 +109,10 @@ module.exports = function Ec2Mock() {
 
     this.createSecurityGroup = function(params, callback) {
         console.log('MOCK createSecurityGroup REQUEST: ' + JSON.stringify(params));
+        if (params.GroupName == 'default') {
+            callback('InvalidParameterValue: Cannot use reserved security group name: default');
+            return;
+        }
         var groupId = 'sg-MOCKCREATED-' + this.nextCreateSecurityGroupId++;
         var sg = new SgMock(groupId)
             .withGroupName(params.GroupName)
@@ -118,6 +130,10 @@ module.exports = function Ec2Mock() {
         var found = false;
         for (var i = 0; i < this.securityGroups.length; i++) {
             if (this.securityGroups[i].GroupId == params.GroupId) {
+                if (this.securityGroups[i].GroupName == 'default') {
+                    callback('A client error (CannotDelete) occurred when calling the DeleteSecurityGroup operation: the specified group: "' + this.securityGroups[i].GroupId + '" name: "default" cannot be deleted by a user');
+                    return;
+                }
                 found = true;
             } else {
                 sgs.push(this.securityGroups[i]);
@@ -341,8 +357,9 @@ module.exports = function Ec2Mock() {
                 resource.Tags.forEach(function(tag) {
                     var found = false;
                     for (var i = 0; i < params.Tags.length; i++) {
-                        if (tag.key == params.Tags[i].Key) {
+                        if (tag.Key == params.Tags[i].Key) {
                             if (!params.Tags[i].Value || (tag.Value == params.Tags[i].Value)) {
+                                console.log('MOCK deleteTags found matching tag ' + JSON.stringify(params.Tags[i]) + ' on ' + JSON.stringify(resource));
                                 found = true;
                                 break;
                             }

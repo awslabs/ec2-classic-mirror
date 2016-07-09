@@ -55,7 +55,7 @@ exports.cloudWatchEventFilterGroup = {
         filterCloudWatchEventTestFile('./cloudwatch_event_authorizesecuritygroupingress_assumedrole.json', false, test);
     },
 
-    // Call to CreateTags for a classicmirror tag
+    // Call to CreateTags for a classiclinkmirror tag
     relevantCreateTagsCall: function(test) {
         filterCloudWatchEventTestFile('./cloudwatch_event_create_tags.json', true, test);
     },

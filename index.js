@@ -42,7 +42,7 @@ exports.handler = function(event, context) {
     cloudWatchEventFilter.filterCloudWatchEvent(event, context.invokedFunctionArn)
         .then(function(result) {
             if (result.isRelevant) {
-                runClassicMirrorWorkflow(context);
+                runClassicLinkMirrorWorkflow(context);
             } else {
                 console.log('Event not relevant');
                 context.succeed(null);
@@ -50,7 +50,7 @@ exports.handler = function(event, context) {
         });
 };
 
-function runClassicMirrorWorkflow(context) {
+function runClassicLinkMirrorWorkflow(context) {
 
     var errors = [];
 

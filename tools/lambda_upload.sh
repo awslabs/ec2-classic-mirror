@@ -39,13 +39,13 @@ s3_key=""
 if [ ! -z $optional_prefix ]; then
     s3_key+=$optional_prefix"/"
 fi
-s3_key+=classicmirror-$datestamp
+s3_key+=classiclinkmirror-$datestamp
 s3_key+=".zip"
 echo $s3_key
 
 s3_location=s3://$s3_bucket/$s3_key
 
-TMP_ZIP_FILE=/tmp/classicmirror.zip
+TMP_ZIP_FILE=/tmp/classiclinkmirror.zip
 pushd $code_location && \
 zip -r $TMP_ZIP_FILE index.js lib node_modules package.json &&
 aws s3 cp $TMP_ZIP_FILE $s3_location --region $region && \

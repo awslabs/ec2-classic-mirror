@@ -12,7 +12,7 @@
         "userIdentity": {
             "type": "AssumedRole",
             "principalId": "AROAI73YU4ORRHW2435MQ:awslambda_309_20160305214257834",
-            "arn":"arn:aws:sts::111122223333:assumed-role/ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V/awslambda_309_20160305214257834",
+            "arn":"arn:aws:sts::111122223333:assumed-role/ClassicLinkMirrorLambda-LambdaExecRole-1TAPM87GGXL8V/awslambda_309_20160305214257834",
             "accountId": "111122223333",
             "accessKeyId": "ASIAI2YQZ486GRMMQEKA",
             "sessionContext": {
@@ -23,9 +23,9 @@
                 "sessionIssuer": {
                     "type":"Role",
                     "principalId": "AROAI73YU4ORRHW2435MQ",
-                    "arn":"arn:aws:iam::111122223333:role/ClassicMirror/LambdaExecRole/ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V",
+                    "arn":"arn:aws:iam::111122223333:role/ClassicLinkMirror/LambdaExecRole/ClassicLinkMirrorLambda-LambdaExecRole-1TAPM87GGXL8V",
                     "accountId": "111122223333",
-                    "userName": "ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V"
+                    "userName": "ClassicLinkMirrorLambda-LambdaExecRole-1TAPM87GGXL8V"
                 }
             }
         },

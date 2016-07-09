@@ -18,7 +18,7 @@ module.exports = function LambdaMock() {
         callback(null, {
             FunctionName: 'MyLambdaFunctionName',
             FunctionArn: params.FunctionName,
-            Role: 'arn:aws:iam::111122223333:role/ClassicMirror/LambdaExecRole/ClassicMirrorLambda-LambdaExecRole-1TAPM87GGXL8V'
+            Role: 'arn:aws:iam::111122223333:role/ClassicLinkMirror/LambdaExecRole/ClassicLinkMirrorLambda-LambdaExecRole-1TAPM87GGXL8V'
         });
     };
 };

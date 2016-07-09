@@ -230,7 +230,8 @@ exports.syncSecurityGroupRules = {
         this.ec2mock.securityGroups.push(this.classicSg8a, this.vpcSg8b);
 
         // Pair 9: VPC Security Group has a reference to another VPC
-        //         Security Group that is not managed by ClassicMirror.
+        //         Security Group that is not managed by ClassicLink
+        //         Mirror.
         //         It should not get revoked.
         this.classicSg9a = new SgMock('sg-9999999a')
             .withLinkToVpc(this.vpcId)

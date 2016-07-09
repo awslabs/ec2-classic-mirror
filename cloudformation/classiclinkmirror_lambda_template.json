@@ -1,5 +1,5 @@
 {
-    "Description": "ClassicMirror: Lambda function and CloudWatch Events rule",
+    "Description": "ClassicLink Mirror: Lambda function and CloudWatch Events rule",
 
     "Parameters": {
 
@@ -38,7 +38,7 @@
         "LambdaExecRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
-                "Path": "/ClassicMirror/LambdaExecRole/",
+                "Path": "/ClassicLinkMirror/LambdaExecRole/",
                 "AssumeRolePolicyDocument": {
                     "Version": "2012-10-17",
                     "Statement": [ {
@@ -54,7 +54,7 @@
                 ],
                 "Policies": [
                     {
-                        "PolicyName": "EC2PermissionsForClassicMirror",
+                        "PolicyName": "EC2PermissionsForClassicLinkMirror",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [ {
@@ -74,7 +74,7 @@
                         }
                     },
                     {
-                        "PolicyName": "EC2PermissionsForClassicMirrorTaggedResources",
+                        "PolicyName": "EC2PermissionsForClassicLinkMirrorTaggedResources",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [ {
@@ -87,7 +87,7 @@
                                 ],
                                 "Condition": {
                                     "StringLike": {
-                                        "ec2:ResourceTag/classicmirror:mirroredFromClassicSecurityGroupId": "*"
+                                        "ec2:ResourceTag/classiclinkmirror:mirroredFromClassicSecurityGroupId": "*"
                                     }
                                 }
                             } ]
@@ -113,7 +113,7 @@
         "CloudWatchEventRuleEC2API": {
             "Type": "AWS::Events::Rule",
             "Properties": {
-                "Description": "ClassicMirror EC2 API call event",
+                "Description": "ClassicLink Mirror EC2 API call event",
                 "EventPattern": {
                     "detail-type": [ "AWS API Call via CloudTrail" ],
                     "detail": {
@@ -130,7 +130,7 @@
                 "State": "ENABLED",
                 "Targets": [ {
                     "Arn": { "Fn::GetAtt": [ "LambdaFunction", "Arn" ] },
-                    "Id": "ClassicMirrorEC2API-Lambda"
+                    "Id": "ClassicLinkMirrorEC2API-Lambda"
                 } ]
             }
         },
@@ -151,7 +151,7 @@
         "CloudWatchEventRuleInstanceRunning": {
             "Type": "AWS::Events::Rule",
             "Properties": {
-                "Description": "ClassicMirror EC2 instance state change notification event",
+                "Description": "ClassicLink Mirror EC2 instance state change notification event",
                 "EventPattern": {
                     "detail-type": [ "EC2 Instance State-change Notification" ],
                     "source": [ "aws.ec2" ],
@@ -160,7 +160,7 @@
                 "State": "ENABLED",
                 "Targets": [ {
                     "Arn": { "Fn::GetAtt": [ "LambdaFunction", "Arn" ] },
-                    "Id": "ClassicMirrorInstanceRunning-Lambda"
+                    "Id": "ClassicLinkMirrorInstanceRunning-Lambda"
                 } ]
             }
         },

@@ -2,7 +2,7 @@
 OPTIND=1
 
 function usage() {
-    echo "Usage: $0 [-p optional_prefix] [-r region] s3_bucket code_location"
+    echo "Usage: $0 [-p optional_prefix] [-r region] s3_bucket_base_name code_location"
     exit 0
 }
 

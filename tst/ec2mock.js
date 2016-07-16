@@ -109,10 +109,20 @@ module.exports = function Ec2Mock() {
 
     this.createSecurityGroup = function(params, callback) {
         console.log('MOCK createSecurityGroup REQUEST: ' + JSON.stringify(params));
+
+        // Can never create a Security Group named 'default'
         if (params.GroupName == 'default') {
             callback('InvalidParameterValue: Cannot use reserved security group name: default');
             return;
         }
+
+        // If the VPC (or Classic) already has a Security Group with this
+        // name, you can't create it.
+        if (this.securityGroups.some(function(sg) { return ((sg.VpcId == params.VpcId) && (sg.GroupName == params.GroupName)) })) {
+            callback('A client error (InvalidGroup.Duplicate) occurred when calling the CreateSecurityGroup operation: The security group \'' + params.GroupName + '\' already exists for VPC \'' + params.VpcId + '\'');
+            return;
+        }
+
         var groupId = 'sg-MOCKCREATED-' + this.nextCreateSecurityGroupId++;
         var sg = new SgMock(groupId)
             .withGroupName(params.GroupName)

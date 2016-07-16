@@ -50,7 +50,15 @@ exports.createCleanupSecurityGroups = {
             .withCopiedFromClassic('sg-fdfdfdfd')
             .withTag(Tags.UPDATE_TIMESTAMP_TAG_KEY, 'good ol days');
 
-        this.ec2mock.securityGroups = [this.classicSg1, this.classicSg2, this.classicSg3, this.vpcSg4, this.vpcSg5, this.vpcSg6, this.classicSgDefault, this.vpcSgDefault, this.otherVpcSgDefault];
+        // Conflicting names
+        this.classicSgNamedFoo = new SgMock('sg-0000f000')
+            .withGroupName('foo')
+            .withLinkToVpc(this.vpcId);
+        this.vpcSgNamedFoo = new SgMock('sg-0000f001')
+            .withVpcId(this.vpcId)
+            .withGroupName('foo');
+
+        this.ec2mock.securityGroups = [this.classicSg1, this.classicSg2, this.classicSg3, this.vpcSg4, this.vpcSg5, this.vpcSg6, this.classicSgDefault, this.vpcSgDefault, this.otherVpcSgDefault, this.classicSgNamedFoo, this.vpcSgNamedFoo];
 
         this.securityGroupPairs = [
             { classicSecurityGroup: this.classicSg1, vpcSecurityGroup: this.vpcSg4 },
@@ -59,7 +67,8 @@ exports.createCleanupSecurityGroups = {
             { vpcSecurityGroup: this.vpcSg5 },
             { vpcSecurityGroup: this.vpcSg6 },
             { classicSecurityGroup: this.classicSgDefault },
-            { vpcSecurityGroup: this.otherVpcSgDefault }
+            { vpcSecurityGroup: this.otherVpcSgDefault },
+            { classicSecurityGroup: this.classicSgNamedFoo }
         ];
         this.originalSecurityGroupPairsCount = this.securityGroupPairs.length;
 
@@ -98,12 +107,13 @@ exports.createCleanupSecurityGroups = {
                 // One of the orphans is a default Security Group; we
                 // should not be trying to delete it, but it should be
                 // removed from the set of Security Group pairs.
+                // Another one of the orphans was one with a conflicting
+                // name.  Since no Security Groups was created, there was
+                // none to delete.
                 // The other two are expected to be deleted.
                 var expectedDeletedGroupIds = ['sg-55555555', 'sg-66666666' ];
-                test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount - expectedDeletedGroupIds.length - 1);
-                for (var i = 0; i < that.securityGroupPairs.length; i++) {
-                    test.ok(that.securityGroupPairs[i].classicSecurityGroup);
-                }
+                _validateAllPairsComplete(test, that.securityGroupPairs);
+                test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount - expectedDeletedGroupIds.length - 2);
                 test.deepEqual(that.deletedGroupIds.sort(), expectedDeletedGroupIds);
                 _validateOrphanedVpcDefaultSecurityGroup(test, that.otherVpcSgDefault);
                 test.done();
@@ -192,13 +202,12 @@ exports.createCleanupSecurityGroups = {
         cleanupSecurityGroups.cleanupOrphanedVpcMirroredSecurityGroups(this.securityGroupPairs, function(err, data) {
             test.ok(!err);
 
-            // Expect: All three entries are removed from
-            //         securityGroupPairs, even the failing one.
+            // Expect: All pairs are complete.
             // But only one of them got successfully deleted.  Of the
             // others, one is a default Security Group and isn't
             // deletable; the other we forced to fail deletion in this
             // test.
-            test.equals(that.securityGroupPairs.length, that.originalSecurityGroupPairsCount - 3);
+            _validateAllPairsComplete(test, that.securityGroupPairs);
             test.deepEqual(that.deletedGroupIds, ['sg-66666666']);
         });
         test.done();
@@ -234,5 +243,13 @@ function _validateOrphanedVpcDefaultSecurityGroup(test, vpcSecurityGroup) {
     ];
     tags.forEach(function(tag) {
         test.ok(!Tags.getResourceTagValue(vpcSecurityGroup, tag));
+    });
+}
+
+// After CleanupOrphanedSecurityGroups, all pairs must be complete
+function _validateAllPairsComplete(test, pairs) {
+    pairs.forEach(function(pair) {
+        test.ok(pair.classicSecurityGroup);
+        test.ok(pair.vpcSecurityGroup);
     });
 }

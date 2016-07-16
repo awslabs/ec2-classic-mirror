@@ -147,6 +147,15 @@ exports.createCleanupSecurityGroups = {
             test.ok(that.securityGroupPairs[1].error);
             test.ok(that.securityGroupPairs[2].vpcSecurityGroup);
 
+            // Anywhere we hit an error, the EC2-Classic Security Group
+            // should be tagged with it.
+            that.securityGroupPairs.forEach(function(pair) {
+                if (pair.error) {
+                    test.ok(Tags.getResourceTagValue(pair.classicSecurityGroup, Tags.LAST_ERROR_TAG_KEY));
+                    test.ok(Tags.getResourceTagValue(pair.classicSecurityGroup, Tags.UPDATE_TIMESTAMP_TAG_KEY));
+                }
+            });
+
             test.done();
         });
     },

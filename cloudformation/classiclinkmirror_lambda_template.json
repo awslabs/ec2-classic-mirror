@@ -30,7 +30,7 @@
                 "Description": "This event-triggered Lambda function monitors user-tagged EC2-Classic Security Groups, maintaining mirror Security Groups in the specified VPCs and ClassicLinking member EC2 instances to them",
                 "Handler": "index.handler",
                 "Role": { "Fn::GetAtt": [ "LambdaExecRole", "Arn" ] },
-                "Runtime": "nodejs4.3",
+                "Runtime": "nodejs10.x",
                 "Timeout": "60"
             }
         },
